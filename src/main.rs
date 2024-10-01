@@ -163,8 +163,7 @@ fn load_level(level_dat: &str) -> (Vec<Tile>, Vec2) {
 
 fn color_from_distance(cam: Vec3, point: Vec3) -> Color {
     let dist = cam.distance(point);
-    let val = 0.5 / (0.01 + (dist * 0.4) );
-
+    let val = 1. / 2f32.powf(dist/2.);
     let col = Color::new(val, val, val, 1.);
     col
 }
