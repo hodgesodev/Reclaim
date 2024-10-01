@@ -4,7 +4,6 @@ use std::f32::consts::PI;
 use std::fs::*;
 use std::io::*;
 use std::path::Path;
-use std::ptr::eq;
 use std::vec::*;
 
 const MOVE_SPEED: f32 = 1.0;
@@ -35,6 +34,7 @@ pub struct Tile {
     x: f32,
     y: f32,
     z: f32,
+    facing: i8,
 }
 
 fn load_level(level_dat: &str) -> (Vec<Tile>, Vec2) {
@@ -63,15 +63,16 @@ fn load_level(level_dat: &str) -> (Vec<Tile>, Vec2) {
     let mut start_pos: Vec2 = vec2(0.0, 0.0);
 
     for line in level_vec.iter() {
-        let split: Vec<&str> = line.split("").collect();
-        for ch in split.iter() {
-            if eq(ch, &"*") {
+        // let split: Vec<&str> = line.split("").collect();
+        for ch in line.chars() {
+            if ch.eq(&'*') {
                 start_pos = vec2(column as f32, row as f32);
                 let t_floor = Tile {
                     kind: Floor,
                     x: column as f32,
                     y: 0.0,
                     z: row as f32,
+                    facing: 0,
                 };
                 tiles.push(t_floor);
                 let t_ceil = Tile {
@@ -79,23 +80,52 @@ fn load_level(level_dat: &str) -> (Vec<Tile>, Vec2) {
                     x: column as f32,
                     y: 1.0,
                     z: row as f32,
+                    facing: 0,
                 };
                 tiles.push(t_ceil);
-            }
-            if eq(ch, &"#") {
+            } else if ch.eq(&'▔') {
                 let t = Tile {
                     kind: Wall,
                     x: column as f32,
-                    y: 0.5,
+                    y: 0.0,
                     z: row as f32,
+                    facing: 0,
                 };
                 tiles.push(t);
-            } else if eq(ch, &" ") {
+            } else if ch.eq(&'▕') {
+                let t = Tile {
+                    kind: Wall,
+                    x: column as f32,
+                    y: 0.0,
+                    z: row as f32,
+                    facing: 1,
+                };
+                tiles.push(t);
+            } else if ch.eq(&'▁') {
+                let t = Tile {
+                    kind: Wall,
+                    x: column as f32,
+                    y: 0.0,
+                    z: row as f32,
+                    facing: 2,
+                };
+                tiles.push(t);
+            } else if ch.eq(&'▏') {
+                let t = Tile {
+                    kind: Wall,
+                    x: column as f32,
+                    y: 0.0,
+                    z: row as f32,
+                    facing: 3,
+                };
+                tiles.push(t);
+            } else if ch.eq(&' ') {
                 let t_floor = Tile {
                     kind: Floor,
                     x: column as f32,
                     y: 0.0,
                     z: row as f32,
+                    facing: 0,
                 };
                 tiles.push(t_floor);
                 let t_ceil = Tile {
@@ -103,6 +133,7 @@ fn load_level(level_dat: &str) -> (Vec<Tile>, Vec2) {
                     x: column as f32,
                     y: 1.0,
                     z: row as f32,
+                    facing: 0,
                 };
                 tiles.push(t_ceil);
             }
@@ -113,6 +144,14 @@ fn load_level(level_dat: &str) -> (Vec<Tile>, Vec2) {
     }
 
     (tiles, start_pos).clone()
+}
+
+fn color_from_distance(cam: Vec3, point: Vec3) -> Color {
+    let dist = cam.distance(point);
+    let val = 1. / (dist * 0.8);
+
+    let col = Color::new(val, val, val, 1.);
+    col
 }
 
 #[macroquad::main(conf)]
@@ -131,17 +170,18 @@ async fn main() {
         yaw.sin() * pitch.cos(),
     )
     .normalize();
-    let mut right ;
-    let mut up ;
+    let mut right;
+    let mut up;
 
-    show_mouse(false);
+    // show_mouse(false);
 
-    let mut tiles: Vec<Tile>;
-    let mut start_position: Vec2;
-
-    (tiles, start_position) = load_level("./assets/level1.dat");
+    let (tiles, start_position) = load_level("./assets/level1.dat");
 
     let mut position = vec3(start_position.x, 0.5, start_position.y);
+
+    let tex_floor = Texture2D::from_file_with_format(include_bytes!("../assets/Dirt_16.png"), None);
+    let tex_wall = Texture2D::from_file_with_format(include_bytes!("../assets/Brick_08.png"), None);
+    let tex_ceil = Texture2D::from_file_with_format(include_bytes!("../assets/Metal_17.png"), None);
 
     loop {
         let _delta = get_frame_time();
@@ -195,45 +235,68 @@ async fn main() {
             viewport: Option::from((0, screen_height() as i32 - 720, 720, 720)),
         });
 
-        draw_grid_ex(
-            20,
-            1.0,
-            BLACK,
-            GRAY,
-            vec3(0.5, 0.0, 0.5),
-            Default::default(),
-        );
-
-        // draw_cube_wires(vec3(1.0, 0.5, -5.0), vec3(1., 1., 1.), GREEN);
-        // draw_cube_wires(vec3(1.0, 0.5, 5.0), vec3(1., 1., 1.), BLUE);
-        // draw_cube_wires(vec3(6.0, 0.5, 3.0), vec3(1., 1., 1.), RED);
-
         for tile in &tiles {
             match tile.kind {
                 Floor => {
+                    let pos = vec3(tile.x - 0.5, tile.y, tile.z - 0.5);
                     draw_affine_parallelogram(
-                        vec3(tile.x + 0.5, tile.y, tile.z + 0.5),
+                        pos,
                         1. * Vec3::X,
                         1. * Vec3::Z,
-                        Option::from(&Texture2D::from_file_with_format(include_bytes!("../assets/Dirt_16.png"), None)),
-                        WHITE,
+                        Option::from(&tex_floor),
+                        color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
                     );
                 }
-                Wall => {
-                    draw_cube(
-                        vec3(tile.x + 0.5, tile.y, tile.z + 0.5),
-                        vec3(1.0, 1.0, 1.0),
-                        Option::from(&Texture2D::from_file_with_format(include_bytes!("../assets/Brick_08.png"), None)),
-                        WHITE,
-                    );
-                }
+                Wall => match tile.facing {
+                    0 => {
+                        let pos = vec3(tile.x - 0.5, tile.y, tile.z - 0.5);
+                        draw_affine_parallelogram(
+                            pos,
+                            1. * Vec3::Y,
+                            1. * Vec3::X,
+                            Option::from(&tex_wall),
+                            color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
+                        )
+                    },
+                    1 => {
+                        let pos = vec3(tile.x + 0.5, tile.y, tile.z - 0.5);
+                        draw_affine_parallelogram(
+                            pos,
+                            1. * Vec3::Y,
+                            1. * Vec3::Z,
+                            Option::from(&tex_wall),
+                            color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
+                        )
+                    },
+                    2 => {
+                        let pos = vec3(tile.x - 0.5, tile.y, tile.z + 0.5);
+                        draw_affine_parallelogram(
+                            pos,
+                            1. * Vec3::Y,
+                            1. * Vec3::X,
+                            Option::from(&tex_wall),
+                            color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
+                        )
+                    },
+                    3 => {
+                        let pos = vec3(tile.x - 0.5, tile.y, tile.z - 0.5);
+                        draw_affine_parallelogram(
+                            pos,
+                            1. * Vec3::Y,
+                            1. * Vec3::Z,
+                            Option::from(&tex_wall),
+                            color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
+                        )
+                    },
+                    _ => {}
+                },
                 TileType::Ceiling => {
                     draw_affine_parallelogram(
-                        vec3(tile.x + 0.5, tile.y, tile.z + 0.5),
+                        vec3(tile.x - 0.5, tile.y, tile.z - 0.5),
                         1. * Vec3::X,
                         1. * Vec3::Z,
-                        Option::from(&Texture2D::from_file_with_format(include_bytes!("../assets/Metal_17.png"), None)),
-                        WHITE,
+                        Option::from(&tex_ceil),
+                        color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
                     );
                 }
             }
@@ -242,6 +305,7 @@ async fn main() {
         // Back to screen space, render some text
 
         set_default_camera();
+
 
         next_frame().await
     }
