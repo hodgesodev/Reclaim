@@ -119,6 +119,21 @@ fn load_level(level_dat: &str) -> (Vec<Tile>, Vec2) {
                     facing: 3,
                 };
                 tiles.push(t);
+            }else if ch.eq(&'#') {
+                let mut t = Tile {
+                    kind: Wall,
+                    x: column as f32,
+                    y: 0.0,
+                    z: row as f32,
+                    facing: 0,
+                };
+                tiles.push(t);
+                t.facing = 1;
+                tiles.push(t);
+                t.facing = 2;
+                tiles.push(t);
+                t.facing = 3;
+                tiles.push(t);
             } else if ch.eq(&' ') {
                 let t_floor = Tile {
                     kind: Floor,
@@ -148,7 +163,7 @@ fn load_level(level_dat: &str) -> (Vec<Tile>, Vec2) {
 
 fn color_from_distance(cam: Vec3, point: Vec3) -> Color {
     let dist = cam.distance(point);
-    let val = 1. / (dist * 0.8);
+    let val = 0.5 / (0.01 + (dist * 0.4) );
 
     let col = Color::new(val, val, val, 1.);
     col
@@ -249,40 +264,40 @@ async fn main() {
                 }
                 Wall => match tile.facing {
                     0 => {
-                        let pos = vec3(tile.x - 0.5, tile.y, tile.z - 0.5);
+                        let pos = vec3(tile.x + 0.5, tile.y + 1., tile.z - 0.5);
                         draw_affine_parallelogram(
                             pos,
-                            1. * Vec3::Y,
-                            1. * Vec3::X,
+                            -1. * Vec3::Y,
+                            -1. * Vec3::X,
                             Option::from(&tex_wall),
                             color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
                         )
                     },
                     1 => {
-                        let pos = vec3(tile.x + 0.5, tile.y, tile.z - 0.5);
+                        let pos = vec3(tile.x + 0.5, tile.y + 1., tile.z + 0.5);
                         draw_affine_parallelogram(
                             pos,
-                            1. * Vec3::Y,
-                            1. * Vec3::Z,
+                            -1. * Vec3::Y,
+                            -1. * Vec3::Z,
                             Option::from(&tex_wall),
                             color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
                         )
                     },
                     2 => {
-                        let pos = vec3(tile.x - 0.5, tile.y, tile.z + 0.5);
+                        let pos = vec3(tile.x - 0.5, tile.y + 1., tile.z + 0.5);
                         draw_affine_parallelogram(
                             pos,
-                            1. * Vec3::Y,
+                            -1. * Vec3::Y,
                             1. * Vec3::X,
                             Option::from(&tex_wall),
                             color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
                         )
                     },
                     3 => {
-                        let pos = vec3(tile.x - 0.5, tile.y, tile.z - 0.5);
+                        let pos = vec3(tile.x - 0.5, tile.y + 1., tile.z - 0.5);
                         draw_affine_parallelogram(
                             pos,
-                            1. * Vec3::Y,
+                            -1. * Vec3::Y,
                             1. * Vec3::Z,
                             Option::from(&tex_wall),
                             color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
@@ -290,6 +305,15 @@ async fn main() {
                     },
                     _ => {}
                 },
+                // Wall => {
+                //     draw_cube(
+                //         vec3(tile.x, tile.y + 0.5, tile.z),
+                //         if tile.facing == 1 || tile.facing == 3 {vec3(1., 1., 1.)}
+                //         else {vec3(1., -1., 1.)},
+                //         Option::from(&tex_wall),
+                //         color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
+                //     )
+                // }
                 TileType::Ceiling => {
                     draw_affine_parallelogram(
                         vec3(tile.x - 0.5, tile.y, tile.z - 0.5),
