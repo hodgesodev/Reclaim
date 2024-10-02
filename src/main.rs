@@ -194,6 +194,7 @@ async fn main() {
     let tex_floor = Texture2D::from_file_with_format(include_bytes!("../assets/Dirt_16.png"), None);
     let tex_wall = Texture2D::from_file_with_format(include_bytes!("../assets/Brick_08.png"), None);
     let tex_ceil = Texture2D::from_file_with_format(include_bytes!("../assets/Metal_17.png"), None);
+    let bg = Texture2D::from_file_with_format(include_bytes!("../assets/UI/base.png"), None);
 
     loop {
         let _delta = get_frame_time();
@@ -234,7 +235,7 @@ async fn main() {
 
         clear_background(BLACK);
         
-        
+        draw_texture(&bg, 0.0, 0.0, WHITE);
 
         set_camera(&Camera3D {
             position,
@@ -326,18 +327,18 @@ async fn main() {
 
         set_default_camera();
 
-        let font = load_ttf_font("./assets/chomsky/Chomsky.ttf").await.unwrap();
+        // let font = load_ttf_font("./assets/chomsky/Chomsky.ttf").await.unwrap();
 
-        let text_params = TextParams {
-            font: Option::from(&font),
-            font_size: 60,
-            font_scale: 1.0,
-            font_scale_aspect: 1.,
-            rotation: 0.0,
-            color: WHITE,
-        };
+        // let text_params = TextParams {
+        //     font: Option::from(&font),
+        //     font_size: 60,
+        //     font_scale: 1.0,
+        //     font_scale_aspect: 1.,
+        //     rotation: 0.0,
+        //     color: WHITE,
+        // };
 
-        draw_text_ex("RECLAIM", 800., text_params.font_size as f32 * 1.1, text_params);
+        // draw_text_ex("RECLAIM", 800., text_params.font_size as f32 * 1.1, text_params);
 
         next_frame().await
     }
