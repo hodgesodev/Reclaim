@@ -119,7 +119,7 @@ fn load_level(level_dat: &str) -> (Vec<Tile>, Vec2) {
                     facing: 3,
                 };
                 tiles.push(t);
-            }else if ch.eq(&'#') {
+            } else if ch.eq(&'#') {
                 let mut t = Tile {
                     kind: Wall,
                     x: column as f32,
@@ -163,7 +163,7 @@ fn load_level(level_dat: &str) -> (Vec<Tile>, Vec2) {
 
 fn color_from_distance(cam: Vec3, point: Vec3) -> Color {
     let dist = cam.distance(point);
-    let val = 1. / 2f32.powf(dist/2.);
+    let val = 1. / 2f32.powf(dist / 2.);
     let col = Color::new(val, val, val, 1.);
     col
 }
@@ -186,8 +186,6 @@ async fn main() {
     .normalize();
     let mut right;
     let mut up;
-
-    // show_mouse(false);
 
     let (tiles, start_position) = load_level("./assets/level1.dat");
 
@@ -235,8 +233,8 @@ async fn main() {
         }
 
         clear_background(BLACK);
-
-        // Going 3d!
+        
+        
 
         set_camera(&Camera3D {
             position,
@@ -247,6 +245,7 @@ async fn main() {
             render_target: None,
             target: position + front,
             viewport: Option::from((0, screen_height() as i32 - 720, 720, 720)),
+            // viewport: None,
         });
 
         for tile in &tiles {
@@ -271,7 +270,7 @@ async fn main() {
                             Option::from(&tex_wall),
                             color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
                         )
-                    },
+                    }
                     1 => {
                         let pos = vec3(tile.x + 0.5, tile.y + 1., tile.z + 0.5);
                         draw_affine_parallelogram(
@@ -281,7 +280,7 @@ async fn main() {
                             Option::from(&tex_wall),
                             color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
                         )
-                    },
+                    }
                     2 => {
                         let pos = vec3(tile.x - 0.5, tile.y + 1., tile.z + 0.5);
                         draw_affine_parallelogram(
@@ -291,7 +290,7 @@ async fn main() {
                             Option::from(&tex_wall),
                             color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
                         )
-                    },
+                    }
                     3 => {
                         let pos = vec3(tile.x - 0.5, tile.y + 1., tile.z - 0.5);
                         draw_affine_parallelogram(
@@ -301,18 +300,9 @@ async fn main() {
                             Option::from(&tex_wall),
                             color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
                         )
-                    },
+                    }
                     _ => {}
                 },
-                // Wall => {
-                //     draw_cube(
-                //         vec3(tile.x, tile.y + 0.5, tile.z),
-                //         if tile.facing == 1 || tile.facing == 3 {vec3(1., 1., 1.)}
-                //         else {vec3(1., -1., 1.)},
-                //         Option::from(&tex_wall),
-                //         color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
-                //     )
-                // }
                 TileType::Ceiling => {
                     draw_affine_parallelogram(
                         vec3(tile.x - 0.5, tile.y, tile.z - 0.5),
@@ -325,10 +315,29 @@ async fn main() {
             }
         }
 
-        // Back to screen space, render some text
+        set_camera(&Camera2D {
+            rotation: 0.0,
+            zoom: Default::default(),
+            target: Default::default(),
+            offset: Default::default(),
+            render_target: None,
+            viewport: None,
+        });
 
         set_default_camera();
 
+        let font = load_ttf_font("./assets/chomsky/Chomsky.ttf").await.unwrap();
+
+        let text_params = TextParams {
+            font: Option::from(&font),
+            font_size: 60,
+            font_scale: 1.0,
+            font_scale_aspect: 1.,
+            rotation: 0.0,
+            color: WHITE,
+        };
+
+        draw_text_ex("RECLAIM", 800., text_params.font_size as f32 * 1.1, text_params);
 
         next_frame().await
     }

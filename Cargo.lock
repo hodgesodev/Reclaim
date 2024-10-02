@@ -7,6 +7,7 @@ name = "Reclaim"
 version = "0.1.0"
 dependencies = [
  "macroquad",
+ "macroquad-text",
 ]
 
 [[package]]
@@ -154,6 +155,16 @@ dependencies = [
  "miniquad",
  "quad-rand",
  "slotmap",
+]
+
+[[package]]
+name = "macroquad-text"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d0971133efbfeaa7dbf5628a341cc2e571b173145538ea3a19a2664ca588211"
+dependencies = [
+ "fontdue",
+ "macroquad",
 ]
 
 [[package]]
