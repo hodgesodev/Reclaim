@@ -235,7 +235,6 @@ async fn main() {
         }
 
         clear_background(BLACK);
-
         draw_texture(&bg, 0.0, 0.0, WHITE);
 
         let render_target = render_target(240, 240);
