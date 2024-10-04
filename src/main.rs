@@ -38,7 +38,7 @@ pub struct Tile {
 }
 
 fn load_level(level_dat: &str) -> (Vec<Tile>, Vec2) {
-    // Create a path to the desired file
+    // Create path to level
     let path = Path::new(level_dat);
     let display = path.display();
 
@@ -62,8 +62,8 @@ fn load_level(level_dat: &str) -> (Vec<Tile>, Vec2) {
     let mut tiles: Vec<Tile> = Vec::new();
     let mut start_pos: Vec2 = vec2(0.0, 0.0);
 
+    // Translate symbols in file into tiles that go in a Vec<Tile>
     for line in level_vec.iter() {
-        // let split: Vec<&str> = line.split("").collect();
         for ch in line.chars() {
             if ch.eq(&'*') {
                 start_pos = vec2(column as f32, row as f32);
@@ -157,10 +157,11 @@ fn load_level(level_dat: &str) -> (Vec<Tile>, Vec2) {
         column = 0;
         row += 1;
     }
-
     (tiles, start_pos).clone()
 }
 
+// Returns the color value to diffuse tiles that are further away from player.
+// This is for a shadow effect.
 fn color_from_distance(cam: Vec3, point: Vec3) -> Color {
     let dist = cam.distance(point);
     let val = 1. / 2f32.powf(dist / 2.);
@@ -234,19 +235,21 @@ async fn main() {
         }
 
         clear_background(BLACK);
-        
+
         draw_texture(&bg, 0.0, 0.0, WHITE);
+
+        let render_target = render_target(240, 240);
+        render_target.texture.set_filter(FilterMode::Nearest);
 
         set_camera(&Camera3D {
             position,
             up,
             fovy: 1.5,
-            aspect: Option::from(1.0),
+            aspect: Some(1.0),
             projection: Projection::Perspective,
-            render_target: None,
+            render_target: Some(render_target.clone()),
             target: position + front,
-            viewport: Option::from((0, screen_height() as i32 - 720, 720, 720)),
-            // viewport: None,
+            viewport: None,
         });
 
         for tile in &tiles {
@@ -257,7 +260,7 @@ async fn main() {
                         pos,
                         1. * Vec3::X,
                         1. * Vec3::Z,
-                        Option::from(&tex_floor),
+                        Some(&tex_floor),
                         color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
                     );
                 }
@@ -268,7 +271,7 @@ async fn main() {
                             pos,
                             -1. * Vec3::Y,
                             -1. * Vec3::X,
-                            Option::from(&tex_wall),
+                            Some(&tex_wall),
                             color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
                         )
                     }
@@ -278,7 +281,7 @@ async fn main() {
                             pos,
                             -1. * Vec3::Y,
                             -1. * Vec3::Z,
-                            Option::from(&tex_wall),
+                            Some(&tex_wall),
                             color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
                         )
                     }
@@ -288,7 +291,7 @@ async fn main() {
                             pos,
                             -1. * Vec3::Y,
                             1. * Vec3::X,
-                            Option::from(&tex_wall),
+                            Some(&tex_wall),
                             color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
                         )
                     }
@@ -298,7 +301,7 @@ async fn main() {
                             pos,
                             -1. * Vec3::Y,
                             1. * Vec3::Z,
-                            Option::from(&tex_wall),
+                            Some(&tex_wall),
                             color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
                         )
                     }
@@ -309,7 +312,7 @@ async fn main() {
                         vec3(tile.x - 0.5, tile.y, tile.z - 0.5),
                         1. * Vec3::X,
                         1. * Vec3::Z,
-                        Option::from(&tex_ceil),
+                        Some(&tex_ceil),
                         color_from_distance(position, vec3(tile.x, tile.y, tile.z)),
                     );
                 }
@@ -327,18 +330,65 @@ async fn main() {
 
         set_default_camera();
 
-        // let font = load_ttf_font("./assets/chomsky/Chomsky.ttf").await.unwrap();
+        draw_texture_ex(
+            &render_target.texture,
+            0.,
+            0.,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(Vec2::new(720., 720.)),
+                source: None,
+                rotation: 0.0,
+                flip_x: false,
+                flip_y: true,
+                pivot: None,
+            },
+        );
 
-        // let text_params = TextParams {
-        //     font: Option::from(&font),
-        //     font_size: 60,
-        //     font_scale: 1.0,
-        //     font_scale_aspect: 1.,
-        //     rotation: 0.0,
-        //     color: WHITE,
-        // };
+        let fnt_chomsky = load_ttf_font("./assets/chomsky/Chomsky.ttf").await.unwrap();
 
-        // draw_text_ex("RECLAIM", 800., text_params.font_size as f32 * 1.1, text_params);
+        let text_params = TextParams {
+            font: Some(&fnt_chomsky),
+            font_size: 60,
+            font_scale: 1.0,
+            font_scale_aspect: 1.,
+            rotation: 0.0,
+            color: WHITE,
+        };
+
+        let mut direction = "brokey";
+
+        if front.x.round() == 1. {
+            direction = "East";
+        }
+
+        let rounded_front = front.round();
+
+        match rounded_front {
+            Vec3 {
+                x: 1.,
+                y: 0.,
+                z: 0.,
+            } => direction = "East",
+            Vec3 {
+                x: 0.,
+                y: 0.,
+                z: -1.,
+            } => direction = "North",
+            Vec3 {
+                x: -1.,
+                y: 0.,
+                z: 0.,
+            } => direction = "West",
+            Vec3 {
+                x: 0.,
+                y: 0.,
+                z: 1.,
+            } => direction = "South",
+            _ => {}
+        }
+
+        draw_text_ex(format!("{}", direction).as_str(), 0., 50., text_params);
 
         next_frame().await
     }
