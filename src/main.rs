@@ -238,6 +238,7 @@ async fn main() {
         draw_texture(&bg, 0.0, 0.0, WHITE);
 
         let render_target = render_target(240, 240);
+        
         render_target.texture.set_filter(FilterMode::Nearest);
 
         set_camera(&Camera3D {
