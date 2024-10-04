@@ -188,14 +188,19 @@ async fn main() {
     let mut right;
     let mut up;
 
-    let (tiles, start_position) = load_level("./assets/level1.dat");
+    let (tiles, start_position) = load_level("./assets/levels/level1.dat");
 
     let mut position = vec3(start_position.x, 0.5, start_position.y);
 
-    let tex_floor = Texture2D::from_file_with_format(include_bytes!("../assets/Dirt_16.png"), None);
-    let tex_wall = Texture2D::from_file_with_format(include_bytes!("../assets/Brick_08.png"), None);
-    let tex_ceil = Texture2D::from_file_with_format(include_bytes!("../assets/Metal_17.png"), None);
-    let bg = Texture2D::from_file_with_format(include_bytes!("../assets/UI/base.png"), None);
+    // let tex_floor = Texture2D::from_file_with_format(include_bytes!("../assets/textures/Dirt_16.png"), None);
+    // let tex_wall = Texture2D::from_file_with_format(include_bytes!("../assets/textures/Brick_08.png"), None);
+    // let tex_ceil = Texture2D::from_file_with_format(include_bytes!("../assets/textures/Metal_17.png"), None);
+    let tex_floor = Texture2D::from_file_with_format(include_bytes!("../assets/textures/javardry/floor08.png"), None);
+    let tex_wall = Texture2D::from_file_with_format(include_bytes!("../assets/textures/javardry/wall50.png"), None);
+    let tex_ceil = Texture2D::from_file_with_format(include_bytes!("../assets/textures/javardry/floor13.png"), None);
+    let bg = Texture2D::from_file_with_format(include_bytes!("../assets/ui/base.png"), None);
+    let tex_skelly = Texture2D::from_file_with_format(include_bytes!("../assets/textures/javardry/Skeltal Figure.png"), None);
+    let tex_belle = Texture2D::from_file_with_format(include_bytes!("../assets/textures/javardry/Little Belle.png"), None);
 
     loop {
         let _delta = get_frame_time();
@@ -238,7 +243,7 @@ async fn main() {
         draw_texture(&bg, 0.0, 0.0, WHITE);
 
         let render_target = render_target(240, 240);
-        
+
         render_target.texture.set_filter(FilterMode::Nearest);
 
         set_camera(&Camera3D {
@@ -318,6 +323,15 @@ async fn main() {
                 }
             }
         }
+
+        draw_affine_parallelogram(
+            vec3(3.5,  1., 2.5),
+            -1. * Vec3::Y,
+            -1. * Vec3::X,
+            Some(&tex_belle),
+            color_from_distance(position, vec3(3., 0., 2.)),
+        );
+
 
         set_camera(&Camera2D {
             rotation: 0.0,
