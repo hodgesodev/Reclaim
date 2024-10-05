@@ -195,12 +195,28 @@ async fn main() {
     // let tex_floor = Texture2D::from_file_with_format(include_bytes!("../assets/textures/Dirt_16.png"), None);
     // let tex_wall = Texture2D::from_file_with_format(include_bytes!("../assets/textures/Brick_08.png"), None);
     // let tex_ceil = Texture2D::from_file_with_format(include_bytes!("../assets/textures/Metal_17.png"), None);
-    let tex_floor = Texture2D::from_file_with_format(include_bytes!("../assets/textures/javardry/floor08.png"), None);
-    let tex_wall = Texture2D::from_file_with_format(include_bytes!("../assets/textures/javardry/wall50.png"), None);
-    let tex_ceil = Texture2D::from_file_with_format(include_bytes!("../assets/textures/javardry/floor13.png"), None);
-    let bg = Texture2D::from_file_with_format(include_bytes!("../assets/ui/base.png"), None);
-    let tex_skelly = Texture2D::from_file_with_format(include_bytes!("../assets/textures/javardry/Skeltal Figure.png"), None);
-    let tex_belle = Texture2D::from_file_with_format(include_bytes!("../assets/textures/javardry/Little Belle.png"), None);
+    let tex_floor = &Texture2D::from_file_with_format(
+        include_bytes!("../assets/textures/javardry/floor08.png"),
+        None,
+    );
+    let tex_wall = &Texture2D::from_file_with_format(
+        include_bytes!("../assets/textures/javardry/wall50.png"),
+        None,
+    );
+    let tex_ceil = &Texture2D::from_file_with_format(
+        include_bytes!("../assets/textures/javardry/floor13.png"),
+        None,
+    );
+    let bg = &Texture2D::from_file_with_format(include_bytes!("../assets/ui/base.png"), None);
+    let _tex_skelly = &Texture2D::from_file_with_format(
+        include_bytes!("../assets/textures/javardry/Skeltal Figure.png"),
+        None,
+    );
+    let tex_belle = &Texture2D::from_file_with_format(
+        include_bytes!("../assets/textures/javardry/Little Belle.png"),
+        None,
+    );
+    let fnt_chomsky = load_ttf_font("./assets/chomsky/Chomsky.ttf").await.unwrap();
 
     loop {
         let _delta = get_frame_time();
@@ -239,12 +255,20 @@ async fn main() {
             switch = !switch;
         }
 
-        clear_background(BLACK);
+        // clear_background(BLACK);
         draw_texture(&bg, 0.0, 0.0, WHITE);
 
-        let render_target = render_target(240, 240);
+        let render_target = render_target_ex(
+            720,
+            720,
+            RenderTargetParams {
+                sample_count: 1,
+                depth: false,
+            },
+        );
 
         render_target.texture.set_filter(FilterMode::Nearest);
+        // render_target_ex();
 
         set_camera(&Camera3D {
             position,
@@ -253,8 +277,10 @@ async fn main() {
             aspect: Some(1.0),
             projection: Projection::Perspective,
             render_target: Some(render_target.clone()),
+            // render_target: None,
             target: position + front,
             viewport: None,
+            // viewport: Option::from((0, screen_height() as i32 - 720, 720, 720)),
         });
 
         for tile in &tiles {
@@ -325,13 +351,12 @@ async fn main() {
         }
 
         draw_affine_parallelogram(
-            vec3(3.5,  1., 2.5),
+            vec3(3.5, 1., 2.5),
             -1. * Vec3::Y,
             -1. * Vec3::X,
             Some(&tex_belle),
             color_from_distance(position, vec3(3., 0., 2.)),
         );
-
 
         set_camera(&Camera2D {
             rotation: 0.0,
@@ -359,8 +384,6 @@ async fn main() {
             },
         );
 
-        let fnt_chomsky = load_ttf_font("./assets/chomsky/Chomsky.ttf").await.unwrap();
-
         let text_params = TextParams {
             font: Some(&fnt_chomsky),
             font_size: 60,
@@ -371,11 +394,6 @@ async fn main() {
         };
 
         let mut direction = "brokey";
-
-        if front.x.round() == 1. {
-            direction = "East";
-        }
-
         let rounded_front = front.round();
 
         match rounded_front {
